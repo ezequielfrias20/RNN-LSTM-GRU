@@ -1,0 +1,20 @@
+# 📦 Core
+tensorflow==2.16.1            # Framework principal (incluye Keras)
+numpy==1.26.4                 # Manipulación numérica
+pandas==2.2.2                 # Procesamiento de datos
+scikit-learn==1.5.0           # Preprocesamiento y métricas
+
+# 🧠 Deep Learning Específico
+keras==3.3.3                  # API high-level (opcional si usas tf.keras directamente)
+matplotlib==3.9.0             # Visualización
+seaborn==0.13.2               # Gráficos avanzados
+tensorboard==2.16.2           # Monitoreo de entrenamiento
+
+# 🛠 Utilidades
+jupyter==1.0.0                # Notebooks interactivos
+tqdm==4.66.4                  # Barras de progreso
+python-dotenv==1.0.0          # Manejo de variables de entorno
+
+# 📚 Datasets comunes (opcional)
+datasets==2.18.0              # HuggingFace Datasets (para datos preprocesados)
+google-cloud-firestore==2.20.1

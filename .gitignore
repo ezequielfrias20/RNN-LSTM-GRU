@@ -1,0 +1,51 @@
+# Entornos virtuales
+venv/
+env/
+venv*/
+env*/
+*.venv
+pyvenv.cfg
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de configuración y entornos
+*.env
+*.env.local
+.env
+.venv
+
+# Archivos de distribución / paquetes
+*.egg
+*.egg-info
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Archivos de instaladores
+*.exe
+*.msi
+*.zip
+
+# Archivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de datos locales
+*.db
+*.sqlite
