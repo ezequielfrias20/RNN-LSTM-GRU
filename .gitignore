@@ -49,3 +49,8 @@ Thumbs.db
 # Archivos de datos locales
 *.db
 *.sqlite
+
+# Ignorar archivos de credenciales
+firebase-creds.json
+*/firebase-creds.json
+**/firebase-creds.json

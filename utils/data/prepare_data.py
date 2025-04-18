@@ -3,6 +3,7 @@ from google.cloud import firestore
 from google.oauth2 import service_account
 import json
 import os
+from dotenv import load_dotenv
 
 """
     Datos a recolectar: 
@@ -46,7 +47,9 @@ def get_data_firestore_return_array(collection_name, fields_to_extract):
 
     return np_data
 
-def get_data_firestore(collection_name, fields_to_extract):
+def get_data_firestore(collection_name, fields_to_extract, path = '../../firebase-creds.json'):
+    with open(path) as f:
+        creds_json = json.load(f)
     """
     Obtiene datos de Firestore y los convierte en un array de NumPy.
 
@@ -58,7 +61,7 @@ def get_data_firestore(collection_name, fields_to_extract):
         numpy.ndarray: Array con los datos extraídos, listo para entrenamiento.
     """
     # Configurar las credenciales de Firebase
-    creds_json = json.loads(os.getenv('FIREBASE_CREDENTIALS'))
+    # creds_json = json.loads(os.getenv('FIREBASE_CREDENTIALS'))
     creds = service_account.Credentials.from_service_account_info(creds_json)
     db = firestore.Client(credentials=creds)
 

@@ -7,63 +7,69 @@ import matplotlib.pyplot as plt # Gráficas
 import seaborn as sns # Gráficas avanzadas
 import os # Sistema operativo con python
 from datetime import datetime
+from utils.data.preprocess_data import preprocess_data, preprocess_data_2, preprocess_data_3
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from utils.data.prepare_data import get_data_firestore
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # SUPRIMIR ALGUNAS ADVERTENCIAS DE TENSORFLOW
 
-data = pd.read_csv("data/MicrosoftStock.csv")
+# data = pd.read_csv("../../data/MicrosoftStock.csv")
+data2 = get_data_firestore('metrics', [])
+data, input_features, output_features = preprocess_data(data2)
 
 print(data.head()) # Head de datos, te da las primeras 5 filas 
 print(data.info()) # Información básica Tipo de datos
 print(data.describe()) # Descripción general, te da estadicsticas generales (La media, la desviación estandar, el minimo, )
 
-# Initial Data Visualization
-# Plot 1 - Open and Close Prices of time
-plt.figure(figsize=(12,8)) #(ancho, altura)
-plt.plot(data['date'], data['open'], label= 'Open', color="blue")
-plt.plot(data['date'], data['close'], label= 'Close', color="red")
-plt.title("Open-Close Price over Time")
-plt.legend() # Poner una leyenda
-# plt.show() # Mostrat Grafico 
+# # Initial Data Visualization
+# # Plot 1 - Open and Close Prices of time
+# plt.figure(figsize=(12,8)) #(ancho, altura)
+# plt.plot(data['date'], data['open'], label= 'Open', color="blue")
+# plt.plot(data['date'], data['close'], label= 'Close', color="red")
+# plt.title("Open-Close Price over Time")
+# plt.legend() # Poner una leyenda
+# # plt.show() # Mostrat Grafico 
 
 
-# Plot 2 - Trading Volume (check for outliers)
-plt.figure(figsize=(12,8)) #(ancho, altura)
-plt.plot(data['date'], data['volume'], label= 'Volume', color="orange")
-plt.title("Stock Volume over Time")
-# plt.show() # Mostrat Grafico 
+# # Plot 2 - Trading Volume (check for outliers)
+# plt.figure(figsize=(12,8)) #(ancho, altura)
+# plt.plot(data['date'], data['volume'], label= 'Volume', color="orange")
+# plt.title("Stock Volume over Time")
+# # plt.show() # Mostrat Grafico 
 
-# Eliminar law columnas no numericas
-numeric_data = data.select_dtypes(include=["int64", "float64"])
+# # Eliminar law columnas no numericas
+# numeric_data = data.select_dtypes(include=["int64", "float64"])
 
-# Plot 3 - Check for correlation between feautures
-plt.figure(figsize=(8,6))
-sns.heatmap(numeric_data.corr(), annot=True, cmap="coolwarm") # Mapa de calor
-plt.title("Feature Correlation Heatmap")
-# plt.show()
+# # Plot 3 - Check for correlation between feautures
+# plt.figure(figsize=(8,6))
+# sns.heatmap(numeric_data.corr(), annot=True, cmap="coolwarm") # Mapa de calor
+# plt.title("Feature Correlation Heatmap")
+# # plt.show()
 
 # Convertir la hora en un Date time y luego crea un filtro de fecha
 data['date'] = pd.to_datetime(data['date'])
 
 # El filtro nos ayuda a poner un rango de fecha 
-prediction = data.loc[
-    (data['date'] > datetime(2013,1,1)) &
-    (data['date'] < datetime(2018,1,1))
-]
+# prediction = data.loc[
+#     (data['date'] > datetime(2013,1,1)) &
+#     (data['date'] < datetime(2018,1,1))
+# ]
 
-# Plot 4 - Price over Time
-plt.plot(data['date'], data['close'], color="blue")
-plt.xlabel("Date")
-plt.ylabel("Close")
-plt.title("Price over Time")
+# # Plot 4 - Price over Time
+# plt.plot(data['date'], data['close'], color="blue")
+# plt.xlabel("Date")
+# plt.ylabel("Close")
+# plt.title("Price over Time")
 
 # Prepare for the LSTM Model (Sequential)
-stock_close = data.filter(['close']) # Solo quiero los datos de cierre
+stock_close = data.filter(['delayVideo']) # Solo quiero los datos de cierre
 
 # Convertir en una matriz de numpy
 dataset = stock_close.values # convert to numpy array
 
 #longitud del array
-training_data_len = int(np.ceil(len(dataset) * 0.95)) # Solo quiero el 95% de los datos
+training_data_len = int(np.ceil(len(dataset) * 0.80)) # Solo quiero el 95% de los datos
 
 # Preprocessing Stages ( Es como dar la media y la varianza en numpy)
 scaler = StandardScaler() # Vamos a escalar los datos
@@ -110,15 +116,18 @@ model.summary()
 model.compile(
     optimizer="adam",
     loss="mae",
-    metrics=[keras.metrics.RootMeanSquaredError()]
+    metrics=["mae", keras.metrics.RootMeanSquaredError()]
 )
 
+early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+
 # Entrenar el model
-training  = model.fit(x_train, y_train, epochs= 20, batch_size = 32)
+training  = model.fit(x_train, y_train, epochs= 2000, batch_size = 32, callbacks=[early_stop])
 
 # Preparar los datos de prueba
 test_data = scaled_data[training_data_len-60:]
 x_test, y_test = [], dataset[training_data_len:]
+y_test_scaled = test_data[60:, 0]  # Valores reales escalados
 
 # Crearemos las secuencias de prueba
 for i in range(60, len(test_data)):
@@ -126,6 +135,17 @@ for i in range(60, len(test_data)):
 
 x_test = np.array(x_test)
 x_test = np.reshape(x_test, (x_test.shape[0],x_test.shape[1],1 ))
+
+# Evaluar el modelo
+test_loss, test_rmse = model.evaluate(x_test, y_test_scaled, verbose=0)
+print(f'Test Loss (MAE en escala escalada): {test_loss}')
+print(f'Test RMSE (en escala escalada): {test_rmse}')
+
+# Convertir métricas a escala original (si se usa StandardScaler)
+mae_original = test_loss * scaler.scale_[0]
+rmse_original = test_rmse * scaler.scale_[0]
+print(f'MAE en escala original: {mae_original}')
+print(f'RMSE en escala original: {rmse_original}')
 
 # Hacer las predicciones
 
@@ -140,9 +160,15 @@ test = test.copy()
 
 test['Predictions'] = predictions
 
+# Calcular MAE y RMSE en datos originales
+mae = mean_absolute_error(test['delayVideo'], test['Predictions'])
+rmse = np.sqrt(mean_squared_error(test['delayVideo'], test['Predictions']))
+print(f'MAE (escala original): {mae}')
+print(f'RMSE (escala original): {rmse}')
+
 plt.figure(figsize=(12,8)) #(ancho, altura)
-plt.plot(train['date'], train['close'], label="Train (Actual)", color="blue")
-plt.plot(test['date'], test['close'], label="Test (Actual)", color="orange")
+plt.plot(train['date'], train['delayVideo'], label="Train (Actual)", color="blue")
+plt.plot(test['date'], test['delayVideo'], label="Test (Actual)", color="orange")
 plt.plot(test['date'], test['Predictions'], label="Predictions", color="red")
 plt.xlabel("Date")
 plt.ylabel("Close Price")

@@ -17,7 +17,7 @@ python -m venv venv && source venv/bin/activate
 python -m venv venv && venv\Scripts\activate
 
 # Instalar dependencias
-pip install -r requirements.txt && cd utils && pip install -e .
+pip install -r requirements.txt && pip install -e .
 
 # Ejecutar
 python app.py

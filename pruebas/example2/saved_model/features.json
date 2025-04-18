@@ -1,1 +1,1 @@
-{"input_features": ["delayVideo"], "output_features": ["delayVideo"]}
+{"input_features": ["TCPOutputPacket", "TCPOutputDelay", "TCPOutputJitter", "TCPOutputPloss", "TCPInputPacket", "TCPInputDelay", "TCPInputJitter", "TCPInputPloss", "TCPInputRetrans"], "output_features": ["TCPOutputPacket", "TCPOutputDelay", "TCPOutputJitter", "TCPOutputPloss", "TCPInputPacket", "TCPInputDelay", "TCPInputJitter", "TCPInputPloss", "TCPInputRetrans"]}
