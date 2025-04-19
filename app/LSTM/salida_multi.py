@@ -100,6 +100,8 @@ model.add(LSTM(128, activation='tanh', return_sequences=False,
 model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida total
 model.compile(optimizer='adam', loss='mse', metrics=["mae", "mse", RootMeanSquaredError()])
 
+model.summary()
+
 # Revisa NaN o infinitos en los datos
 print("NaN en X_train:", np.isnan(X_train).any())
 print("Inf en X_train:", np.isinf(X_train).any())

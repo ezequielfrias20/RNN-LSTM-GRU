@@ -81,6 +81,8 @@ model.compile(
     metrics=["mae", "mse", RootMeanSquaredError()]
 )
 
+model.summary()
+
 # ------------------------------
 # Revisar datos
 # ------------------------------
