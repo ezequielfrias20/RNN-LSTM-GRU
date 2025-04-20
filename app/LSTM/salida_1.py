@@ -9,6 +9,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
+from utils.save import save_model_and_scalers, load_model_and_scalers
 
 
 # ------------------------------
@@ -27,6 +28,10 @@ EPOCHS = 100
 
 # Fracción de los datos de entrenamiento que se usará para validación (evaluación durante el entrenamiento). Si es 0.2, el 20% de X_train/y_train se usa para validar (no se aprende de ellos).
 VALIDATION_SPLIT = 0.1
+
+LOAD_MODEL = False
+
+NAME_MODEL = 'saved_model_lstm_1'
 
 
 # ------------------------------
@@ -91,45 +96,53 @@ X, y = create_sequences(scaled_data, LOOKBACK, PREDICTION_HORIZON)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, shuffle=False)
 
-# ------------------------------
-# Construcción del modelo LSTM
-# ------------------------------
-model = Sequential()
-model.add(LSTM(128, activation='tanh', return_sequences=False,
-          input_shape=(LOOKBACK, len(features))))
-model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida total
-model.compile(optimizer='adam', loss='mse', metrics=["mae", "mse", RootMeanSquaredError()])
 
-model.summary()
+if (LOAD_MODEL):
+    # Cargar modelo y escaladores
+    model, scaler, scaler_ouput, features, features_ouput = load_model_and_scalers(NAME_MODEL)
+else:
 
-# Revisa NaN o infinitos en los datos
-print("NaN en X_train:", np.isnan(X_train).any())
-print("Inf en X_train:", np.isinf(X_train).any())
-print("NaN en y_train:", np.isnan(y_train).any())
-print("Inf en y_train:", np.isinf(y_train).any())
+    # ------------------------------
+    # Construcción del modelo LSTM
+    # ------------------------------
+    model = Sequential()
+    model.add(LSTM(128, activation='tanh', return_sequences=False,
+            input_shape=(LOOKBACK, len(features))))
+    model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida total
+    model.compile(optimizer='adam', loss='mse', metrics=["mae", "mse", RootMeanSquaredError()])
 
-# Revisa estadísticas básicas
-print("Mínimos:", X_train.min())
-print("Máximos:", X_train.max())
+    model.summary()
 
-# ------------------------------
-# Entrenamiento del modelo
-# ------------------------------
+    # Revisa NaN o infinitos en los datos
+    print("NaN en X_train:", np.isnan(X_train).any())
+    print("Inf en X_train:", np.isinf(X_train).any())
+    print("NaN en y_train:", np.isnan(y_train).any())
+    print("Inf en y_train:", np.isinf(y_train).any())
 
-# Entrenar
-early_stop = EarlyStopping(
-    monitor='val_loss', patience=10, restore_best_weights=True)
+    # Revisa estadísticas básicas
+    print("Mínimos:", X_train.min())
+    print("Máximos:", X_train.max())
 
-history = model.fit(
-    X_train,
-    # Flatten para que coincida con la salida
-    y_train.reshape(y_train.shape[0], -1),
-    epochs=EPOCHS,
-    batch_size=BATCH_SIZE,
-    validation_split=VALIDATION_SPLIT,
-    verbose=1,
-    callbacks=[early_stop],
-)
+    # ------------------------------
+    # Entrenamiento del modelo
+    # ------------------------------
+
+    # Entrenar
+    early_stop = EarlyStopping(
+        monitor='val_loss', patience=10, restore_best_weights=True)
+
+    history = model.fit(
+        X_train,
+        # Flatten para que coincida con la salida
+        y_train.reshape(y_train.shape[0], -1),
+        epochs=EPOCHS,
+        batch_size=BATCH_SIZE,
+        validation_split=VALIDATION_SPLIT,
+        verbose=1,
+        callbacks=[early_stop],
+    )
+    save_model_and_scalers(model, scaler,
+                               scaler, features, features, NAME_MODEL)
 
 # ------------------------------
 # Evaluación
