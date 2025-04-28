@@ -18,7 +18,7 @@ from utils.save import save_model_and_scalers, load_model_and_scalers
 LOOKBACK = 60  # Número de pasos anteriores a considerar para la predicción
 
 # Número de pasos a predecir (asumiendo datos cada 5 segundos para 2 minutos)
-PREDICTION_HORIZON = 10
+PREDICTION_HORIZON = 60
 
 # Número de muestras que se procesan antes de actualizar los pesos del modelo, Valores típicos: 32, 64, 128. El modelo verá 32 muestras por cada actualización.
 BATCH_SIZE = 16
@@ -30,6 +30,8 @@ EPOCHS = 100
 VALIDATION_SPLIT = 0.1
 
 LOAD_MODEL = False
+
+SAVE_MODEL = True
 
 NAME_MODEL = 'saved_model_lstm_multi'
 
@@ -48,12 +50,10 @@ df = df.sort_values('date')
 
 df_filtrado = df[df['jitterVideo'] != 0]
 
-df_filtrado['delayVideo'] = df_filtrado['roundTripTimeVideo']
-df_filtrado['delayAudio'] = df_filtrado['roundTripTimeAudio']
-df_filtrado['packetLossRateVideo'] = df_filtrado['packetsLostVideo'] / \
-    (df_filtrado['packetsReceivedVideo'] + df_filtrado['packetsLostVideo'])
-df_filtrado['packetLossRateAudio'] = df_filtrado['packetsLostAudio'] / \
-    (df_filtrado['packetsReceivedAudio'] + df_filtrado['packetsLostAudio'])
+df_filtrado['delayVideo'] = df_filtrado['roundTripTimeVideo'] / 2
+df_filtrado['delayAudio'] = df_filtrado['roundTripTimeAudio'] / 2
+df_filtrado['packetLossRateVideo'] = df_filtrado['packetsLostVideo'] / (df_filtrado['packetsReceivedVideo'] + df_filtrado['packetsLostVideo'])
+df_filtrado['packetLossRateAudio'] = df_filtrado['packetsLostAudio'] / (df_filtrado['packetsReceivedAudio'] + df_filtrado['packetsLostAudio'])
 
 features = [
         'delayVideo',
@@ -140,7 +140,8 @@ else:
         verbose=1,
         callbacks=[early_stop],
     )
-    save_model_and_scalers(model, scaler,
+    if (SAVE_MODEL):
+        save_model_and_scalers(model, scaler,
                                scaler, features, features, NAME_MODEL)
 
 

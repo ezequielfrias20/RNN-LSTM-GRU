@@ -10,6 +10,7 @@ from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 from utils.save import save_model_and_scalers, load_model_and_scalers
+from utils.models.LSTM.model_1 import build_model_3
 
 
 # ------------------------------
@@ -30,6 +31,8 @@ EPOCHS = 100
 VALIDATION_SPLIT = 0.1
 
 LOAD_MODEL = False
+
+SAVE_MODEL = True
 
 NAME_MODEL = 'saved_model_lstm_1'
 
@@ -111,6 +114,8 @@ else:
     model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida total
     model.compile(optimizer='adam', loss='mse', metrics=["mae", "mse", RootMeanSquaredError()])
 
+    # model = build_model_3((LOOKBACK, len(features)), PREDICTION_HORIZON, features, features, LOOKBACK)
+
     model.summary()
 
     # Revisa NaN o infinitos en los datos
@@ -141,7 +146,8 @@ else:
         verbose=1,
         callbacks=[early_stop],
     )
-    save_model_and_scalers(model, scaler,
+    if (SAVE_MODEL):
+        save_model_and_scalers(model, scaler,
                                scaler, features, features, NAME_MODEL)
 
 # ------------------------------

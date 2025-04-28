@@ -14,8 +14,8 @@ from utils.save import save_model_and_scalers, load_model_and_scalers
 # ------------------------------
 # Hiperparámetros
 # ------------------------------
-LOOKBACK = 24
-PREDICTION_HORIZON = 24
+LOOKBACK = 60
+PREDICTION_HORIZON = 60
 BATCH_SIZE = 16
 EPOCHS = 100
 VALIDATION_SPLIT = 0.1

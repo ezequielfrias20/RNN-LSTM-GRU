@@ -61,7 +61,7 @@ def build_model_3(input_shape, PREDICTION_HORIZON, output_features, input_featur
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
         loss=tf.keras.losses.Huber(),
-        metrics=['mae', 'mse']
+        metrics=['mae', 'mse', RootMeanSquaredError()]
     )
 
     return model

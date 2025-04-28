@@ -1,0 +1,1 @@
+{"input_features": ["delayVideo", "delayAudio", "jitterVideo", "jitterAudio", "packetLossRateVideo", "packetLossRateAudio"], "output_features": ["delayVideo", "delayAudio", "jitterVideo", "jitterAudio", "packetLossRateVideo", "packetLossRateAudio"]}

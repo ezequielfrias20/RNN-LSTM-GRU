@@ -18,8 +18,8 @@ def preprocess_data(data):
     df = pd.get_dummies(df, columns=['networkType', 'roomId'])
 
     # # Calcular variables objetivo
-    df['delayVideo'] = df['roundTripTimeVideo']
-    df['delayAudio'] = df['roundTripTimeAudio']
+    df['delayVideo'] = df['roundTripTimeVideo'] /2
+    df['delayAudio'] = df['roundTripTimeAudio'] /2
     # df['packetLossRateVideo'] = df['packetsLostVideo'] / \
     #     (df['packetsReceivedVideo'] + df['packetsLostVideo'])
     # df['packetLossRateAudio'] = df['packetsLostAudio'] / \

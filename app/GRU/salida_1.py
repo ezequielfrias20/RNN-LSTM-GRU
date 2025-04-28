@@ -10,6 +10,7 @@ from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 from utils.save import save_model_and_scalers, load_model_and_scalers
+from utils.models.LSTM.model_1 import build_model_3
 
 # ------------------------------
 # Hiperparámetros
@@ -20,6 +21,7 @@ BATCH_SIZE = 16
 EPOCHS = 100
 VALIDATION_SPLIT = 0.1
 LOAD_MODEL = False
+SAVE_MODEL = True
 NAME_MODEL = 'saved_model_gru_1'
 
 # ------------------------------
@@ -79,15 +81,19 @@ else:
     # ------------------------------
     # Modelo con GRU
     # ------------------------------
-    model = Sequential()
-    model.add(GRU(128, activation='tanh', return_sequences=False, input_shape=(LOOKBACK, len(features))))
-    model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida
+    # model = Sequential()
+    # model.add(GRU(128, activation='tanh', return_sequences=False, input_shape=(LOOKBACK, len(features))))
+    # model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida
 
-    model.compile(
-        optimizer=Adam(learning_rate=0.001),
-        loss='mse',
-        metrics=["mae", "mse", RootMeanSquaredError()]
-    )
+    # model.compile(
+    #     optimizer=Adam(learning_rate=0.001),
+    #     loss='mse',
+    #     metrics=["mae", "mse", RootMeanSquaredError()]
+    # )
+
+    model = build_model_3((LOOKBACK, len(features)), PREDICTION_HORIZON, features, features, LOOKBACK)
+
+
 
     model.summary()
 
@@ -115,7 +121,8 @@ else:
         verbose=1,
         callbacks=[early_stop],
     )
-    save_model_and_scalers(model, scaler,
+    if (SAVE_MODEL):
+        save_model_and_scalers(model, scaler,
                                scaler, features, features, NAME_MODEL)
 
 # ------------------------------

@@ -122,7 +122,7 @@ model.compile(
 early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
 # Entrenar el model
-training  = model.fit(x_train, y_train, epochs= 2000, batch_size = 32, callbacks=[early_stop])
+training  = model.fit(x_train, y_train, epochs= 100, batch_size = 32, callbacks=[early_stop])
 
 # Preparar los datos de prueba
 test_data = scaled_data[training_data_len-60:]
@@ -135,6 +135,8 @@ for i in range(60, len(test_data)):
 
 x_test = np.array(x_test)
 x_test = np.reshape(x_test, (x_test.shape[0],x_test.shape[1],1 ))
+
+print("nuevo", x_test)
 
 # Evaluar el modelo
 test_loss, test_rmse = model.evaluate(x_test, y_test_scaled, verbose=0)
