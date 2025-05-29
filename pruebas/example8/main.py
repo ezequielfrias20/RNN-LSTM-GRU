@@ -25,10 +25,6 @@ EPOCHS = 100
 # Fracción de los datos de entrenamiento que se usará para validación (evaluación durante el entrenamiento). Si es 0.2, el 20% de X_train/y_train se usa para validar (no se aprende de ellos).
 VALIDATION_SPLIT = 0.2
 
-N_STEPS = 30  # Número de pasos a predecir (asumiendo datos cada 2 segundos para 1 minuto)
-
-NAME_MODEL = 'model_multi' # 'model'
-
 
 # ------------------------------
 # Carga de datos
@@ -61,7 +57,7 @@ data_df['packetLossRateAudio'] = (data_df['packetsLostAudio'] / (
     data_df['packetsReceivedAudio'] + data_df['packetsLostAudio']))*100
 
 # Caracteristicas a usar
-features = [    
+features = [
     'delayVideo',
     'delayAudio',
     'jitterVideo',
@@ -112,27 +108,19 @@ apple_scaled_df = pd.DataFrame(
 # Tamaño de la ventana
 window_size = WINDOW_SIZE
 
-# # Función para crear la secuencia
-# def create_sequence(data, window_size):
-#     X = []
-#     y = []
-#     for i in range(window_size, len(data)):
-#         X.append(data.iloc[i-window_size:i].values)
-#         y.append(data.iloc[i].values)
-#     return np.array(X), np.array(y)
+# Función para crear la secuencia
 
-# X, y = create_sequence(apple_scaled_df, window_size)
 
-def create_multistep_sequence(data, window_size, n_steps_ahead):
+def create_sequence(data, window_size):
     X = []
     y = []
-    for i in range(len(data) - window_size - n_steps_ahead + 1):
-        X.append(data.iloc[i:i+window_size].values)
-        y.append(data.iloc[i+window_size:i+window_size+n_steps_ahead].values)
+    for i in range(window_size, len(data)):
+        X.append(data.iloc[i-window_size:i].values)
+        y.append(data.iloc[i].values)
     return np.array(X), np.array(y)
 
-X, y = create_multistep_sequence(apple_scaled_df, window_size, N_STEPS)
 
+X, y = create_sequence(apple_scaled_df, window_size)
 
 # Separación de la data en train y test, un 80% para train y un 20% para test
 X_train, X_test, y_train, y_test = train_test_split(
@@ -140,7 +128,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 if (LOAD_MODEL):
     model, scaler, scaler, features, features = load_model_and_scalers(
-        model_dir=NAME_MODEL)
+        model_dir="model")
 else:
 
     # ------------------------------
@@ -150,15 +138,14 @@ else:
     model = keras.Sequential([
         keras.layers.LSTM(units=128, activation='tanh', return_sequences=False,
                           input_shape=(X_train.shape[1], X_train.shape[2])),
-        keras.layers.Dense(N_STEPS * 6),
-        keras.layers.Reshape((N_STEPS, 6))
+        keras.layers.Dense(y_train.shape[1])
     ])
 
     model.summary()
 
     model.compile(optimizer='adam',
                   loss='mean_squared_error',
-                  metrics=['RootMeanSquaredError', 'mae'])
+                  metrics=['mae', 'mse', 'RootMeanSquaredError'])
 
     # Early stopping
     early_stopping = EarlyStopping(monitor='val_loss',
@@ -172,22 +159,20 @@ else:
                         callbacks=[early_stopping])
 
     save_model_and_scalers(model, scaler,
-                           scaler, features, features, NAME_MODEL)
+                           scaler, features, features, 'model')
 
 
 # ------------------------------
 # Evaluación
 # ------------------------------
 
-model.summary()
 
 test_loss = model.evaluate(X_test, y_test)
 print(f"Test Loss (Escalado): {test_loss}")
-print("MSE: (Escalado)", test_loss[0])
-print("RMSE: (Escalado)", test_loss[1])
-print("MAE: (Escalado)", test_loss[2])
-
-
+print("RMSE: (Escalado)", test_loss[0])
+print("MAE: (Escalado)", test_loss[1])
+print("MSE: (Escalado)", test_loss[2])
+# print("RMSE: (Escalado)", test_loss[3])
 
 # ------------------------------
 # Predicciones
@@ -195,26 +180,9 @@ print("MAE: (Escalado)", test_loss[2])
 
 predictions = model.predict(X_test)
 
-predictions_reshaped = predictions.reshape(-1, predictions.shape[2])
-
-# Invertimos la normalización
-predictions_inverted = scaler.inverse_transform(predictions_reshaped)
-
-# Restauramos a la forma original
-predictions = predictions_inverted.reshape(predictions.shape)
-
-# # Escalamamos de manera inversa para obtener los valores reales
-# predictions = scaler.inverse_transform(predictions)
-
-y_test_reshaped = y_test.reshape(-1, y_test.shape[2])
-
-y_test_inverted = scaler.inverse_transform(y_test_reshaped)
-
-y_test_rescaled = y_test_inverted.reshape(y_test.shape)
-
-
-
-# ============================================= PRUEBAS ==================================
+# Escalamamos de manera inversa para obtener los valores reales
+predictions = scaler.inverse_transform(predictions)
+y_test_rescaled = scaler.inverse_transform(y_test)
 
 # ------------------------------
 # Grafico de resultado de el 20% de test vs la predicción
@@ -459,7 +427,7 @@ for i, col in enumerate(scaled_df.columns):
     plt.plot(y_test_rescaled[:, i], color='#0072BD',
              label=f'Real {title(col)}', marker='o')
     plt.plot(predictions[:, i], color='#4DBEEE',
-             label=f'Predicción {title(col)}', marker='o', linestyle='--')
+             label=f'Predicción {title(col)}', marker='o')
     plt.title(f'Predicción {title(col)}')
     plt.xlabel('Pasos de Tiempo')
     plt.ylabel(f'{title(col)}')

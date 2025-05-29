@@ -10,6 +10,7 @@ from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 from utils.save import save_model_and_scalers, load_model_and_scalers
+import dataframe_image as dfi
 
 
 # ------------------------------
@@ -18,7 +19,7 @@ from utils.save import save_model_and_scalers, load_model_and_scalers
 LOOKBACK = 60  # Número de pasos anteriores a considerar para la predicción
 
 # Número de pasos a predecir (asumiendo datos cada 5 segundos para 2 minutos)
-PREDICTION_HORIZON = 60
+PREDICTION_HORIZON = 30
 
 # Número de muestras que se procesan antes de actualizar los pesos del modelo, Valores típicos: 32, 64, 128. El modelo verá 32 muestras por cada actualización.
 BATCH_SIZE = 16
@@ -52,21 +53,25 @@ df_filtrado = df[df['jitterVideo'] != 0]
 
 df_filtrado['delayVideo'] = df_filtrado['roundTripTimeVideo'] / 2
 df_filtrado['delayAudio'] = df_filtrado['roundTripTimeAudio'] / 2
-df_filtrado['packetLossRateVideo'] = df_filtrado['packetsLostVideo'] / (df_filtrado['packetsReceivedVideo'] + df_filtrado['packetsLostVideo'])
-df_filtrado['packetLossRateAudio'] = df_filtrado['packetsLostAudio'] / (df_filtrado['packetsReceivedAudio'] + df_filtrado['packetsLostAudio'])
+df_filtrado['packetLossRateVideo'] = df_filtrado['packetsLostVideo'] / \
+    (df_filtrado['packetsReceivedVideo'] + df_filtrado['packetsLostVideo'])
+df_filtrado['packetLossRateAudio'] = df_filtrado['packetsLostAudio'] / \
+    (df_filtrado['packetsReceivedAudio'] + df_filtrado['packetsLostAudio'])
 
 features = [
-        'delayVideo',
-        'delayAudio',
-        'jitterVideo',
-        'jitterAudio',
-        'packetLossRateVideo',
-        'packetLossRateAudio'
-        ]
+    'delayVideo',
+    'delayAudio',
+    'jitterVideo',
+    'jitterAudio',
+    'packetLossRateVideo',
+    'packetLossRateAudio'
+]
 
-print(df_filtrado[features].head()) # Head de datos, te da las primeras 5 filas 
-print(df_filtrado[features].info()) # Información básica Tipo de datos
-print(df_filtrado[features].describe()) # Descripción general, te da estadicsticas generales (La media, la desviación estandar, el minimo, )
+# Head de datos, te da las primeras 5 filas
+print(df_filtrado[features].head())
+print(df_filtrado[features].info())  # Información básica Tipo de datos
+# Descripción general, te da estadicsticas generales (La media, la desviación estandar, el minimo, )
+print(df_filtrado[features].describe())
 data = df_filtrado[features].values
 
 # ------------------------------
@@ -74,6 +79,15 @@ data = df_filtrado[features].values
 # ------------------------------
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data)
+
+df_10 = df_filtrado[features].head(10)
+
+# Opcional: aplicar estilos
+styled_df = df_10.style.set_caption(
+    "Métricas").highlight_max(color='lightgreen')
+
+# Exportar como imagen PNG
+dfi.export(styled_df, 'tabla_usuarios.png')
 
 # ------------------------------
 # Crear secuencias temporales
@@ -96,9 +110,11 @@ X, y = create_sequences(scaled_data, LOOKBACK, PREDICTION_HORIZON)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, shuffle=False)
 
+
 if (LOAD_MODEL):
     # Cargar modelo y escaladores
-    model, scaler, scaler_ouput, features, features_ouput = load_model_and_scalers(NAME_MODEL)
+    model, scaler, scaler_ouput, features, features_ouput = load_model_and_scalers(
+        NAME_MODEL)
 else:
 
     # ------------------------------
@@ -106,9 +122,10 @@ else:
     # ------------------------------
     model = Sequential()
     model.add(LSTM(128, activation='tanh', return_sequences=False,
-            input_shape=(LOOKBACK, len(features))))
+                   input_shape=(LOOKBACK, len(features))))
     model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida total
-    model.compile(optimizer='adam', loss='mse', metrics=["mae", "mse", RootMeanSquaredError()])
+    model.compile(optimizer='adam', loss='mse', metrics=[
+                  "mae", "mse", RootMeanSquaredError()])
 
     model.summary()
 
@@ -144,6 +161,8 @@ else:
         save_model_and_scalers(model, scaler,
                                scaler, features, features, NAME_MODEL)
 
+
+model.summary()
 
 # ------------------------------
 # Evaluación
@@ -193,8 +212,10 @@ fig, axs = plt.subplots(rows, cols, figsize=(15, 5 * rows))
 axs = axs.flatten()
 
 for i in range(n_features):
-    axs[i].plot(y_true[:, time_step_to_plot, i], label='Real', marker='o', linestyle='-')
-    axs[i].plot(y_pred[:, time_step_to_plot, i], label='Predicción', marker='x', linestyle='--')
+    axs[i].plot(y_true[:, time_step_to_plot, i],
+                label='Real', marker='o', linestyle='-')
+    axs[i].plot(y_pred[:, time_step_to_plot, i],
+                label='Predicción', marker='x', linestyle='--')
     axs[i].set_title(features[i])
     axs[i].set_xlabel("Muestra")
     axs[i].set_ylabel("Valor")
@@ -228,7 +249,8 @@ for i in range(len(features)):
     axs[i].grid(True)
     axs[i].legend()
 
-plt.suptitle(f'Predicción de 24 pasos futuros para muestra {sample_idx}', fontsize=16)
+plt.suptitle(
+    f'Predicción de {PREDICTION_HORIZON} pasos futuros para muestra {sample_idx}', fontsize=16)
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 plt.show()
 

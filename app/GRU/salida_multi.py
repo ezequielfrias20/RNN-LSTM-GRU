@@ -15,7 +15,7 @@ from utils.save import save_model_and_scalers, load_model_and_scalers
 # Hiperparámetros
 # ------------------------------
 LOOKBACK = 60
-PREDICTION_HORIZON = 60
+PREDICTION_HORIZON = 30
 BATCH_SIZE = 16
 EPOCHS = 100
 VALIDATION_SPLIT = 0.1
@@ -126,6 +126,8 @@ print("Loss:", metrics_dict[0])
 print("MAE:", metrics_dict[1])
 print("MSE:", metrics_dict[2])
 print("RMSE:", metrics_dict[3])
+
+model.summary()
 
 
 # ------------------------------

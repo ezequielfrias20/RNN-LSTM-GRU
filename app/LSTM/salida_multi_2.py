@@ -43,8 +43,7 @@ NAME_MODEL = 'saved_model_lstm_multi_2_step_10_delayVideo'
 # Procesamiento de datos
 # ------------------------------
 
-# Cargar tus datos (supongamos que ya están en un DataFrame)
-df = get_data_firestore_df('metrics', fields_to_extract=None, force_refresh=True)
+df = get_data_firestore_df('metrics', fields_to_extract=None, force_refresh=False)
 
 # Filtramos los datos atipicos 
 df_filtrado = df[

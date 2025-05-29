@@ -153,6 +153,8 @@ else:
 # ------------------------------
 # Evaluación
 # ------------------------------
+model.summary()
+
 metrics_dict = model.evaluate(X_test, y_test.reshape(y_test.shape[0], -1))
 print("Loss:", metrics_dict[0])
 print("MAE:", metrics_dict[1])

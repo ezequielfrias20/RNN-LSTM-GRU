@@ -81,17 +81,17 @@ else:
     # ------------------------------
     # Modelo con GRU
     # ------------------------------
-    # model = Sequential()
-    # model.add(GRU(128, activation='tanh', return_sequences=False, input_shape=(LOOKBACK, len(features))))
-    # model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida
+    model = Sequential()
+    model.add(GRU(128, activation='tanh', return_sequences=False, input_shape=(LOOKBACK, len(features))))
+    model.add(Dense(PREDICTION_HORIZON * len(features)))  # Salida
 
-    # model.compile(
-    #     optimizer=Adam(learning_rate=0.001),
-    #     loss='mse',
-    #     metrics=["mae", "mse", RootMeanSquaredError()]
-    # )
+    model.compile(
+        optimizer=Adam(learning_rate=0.001),
+        loss='mse',
+        metrics=["mae", "mse", RootMeanSquaredError()]
+    )
 
-    model = build_model_3((LOOKBACK, len(features)), PREDICTION_HORIZON, features, features, LOOKBACK)
+    # model = build_model_3((LOOKBACK, len(features)), PREDICTION_HORIZON, features, features, LOOKBACK)
 
 
 
@@ -133,6 +133,8 @@ print("Loss:", metrics_dict[0])
 print("MAE:", metrics_dict[1])
 print("MSE:", metrics_dict[2])
 print("RMSE:", metrics_dict[3])
+
+model.summary()
 
 # ------------------------------
 # Predicciones

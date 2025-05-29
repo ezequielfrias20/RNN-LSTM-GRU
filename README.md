@@ -1,10 +1,10 @@
-# 🐍 Nombre del Proyecto Python
+# 🐍 TESIS: MODELO LSTM Y GRU
 
-**Descripción**: Breve explicación de lo que hace tu proyecto (ej: "API Flask para gestión de usuarios" o "Script de análisis de datos").
+**Descripción**: Predicción de parámetros de QoS usando LSTM y GRU.
 
 ---
 
-## 🚀 Guía Rápida (TL;DR)
+## 🚀 Guía Rápida
 
 ```bash
 # Clonar
